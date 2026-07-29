@@ -12,7 +12,6 @@ Stage 6 (FINALIZE) of the six-stage ingestion skeleton — `../ARCHITECTURE.md` 
 uv sync --frozen --extra dev              # lock-exact venv
 .venv/bin/python -m pytest                # offline tests (pure gate/deletion logic)
 python -m rag_finalize --run-id <id>      # finalize a plan run (needs ../postgres + ../qdrant)
-python -m rag_finalize                    # whole-table mode
 ```
 
 ## Invariants
@@ -22,5 +21,5 @@ python -m rag_finalize                    # whole-table mode
 - **Tombstone, never drop**: deletions set `ingest_docs.status='deleted'`; the row is kept so delta classifies a re-listing as `reappeared`. Deleting rows breaks that contract.
 - **Idempotence via the active-only filter** (`select_applicable_deletions`): only deletions whose ledger doc is still `active` are applied — no applied_ts bookkeeping; don't add any.
 - **Staged-node cleanup only for done batches** — with no batch-status column, "done" is derived as a batch with no `pending`/`staged` docs. An unfinished batch's nodes are still stage 5's input; report them (`unfinished_batches`), never delete them.
-- `--run-id` scopes by batch **run_id** and deletion run_id; whole-table mode covers all batches and every still-active deletion.
+- **`--run-id` is required** — it scopes by batch **run_id** and deletion run_id. No whole-table mode: a whole-corpus cycle is a run with its own `all-<timestamp>` run_id (decided 2026-07-29, see block 11).
 - Later per block 11: Langfuse metrics + eval-DAG trigger land with block 12 — don't scaffold early.

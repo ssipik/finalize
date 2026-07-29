@@ -63,14 +63,15 @@ def select_applicable_deletions(
 
 
 def run_finalize(
-    run_id: str | None = None,
+    run_id: str,
     engine: Engine | None = None,
     writer: QdrantWriter | None = None,
 ) -> FinalizeReport:
     """FINALIZE stage: quality gate → apply deletions → clear staging.
 
-    With run_id: scoped to that run's batches (ingest_batches.run_id) and deletions.
-    Without: whole-table — all batches, every still-active deletion.
+    Always scoped to one run — that run's batches (ingest_batches.run_id) and
+    its deletions. A whole-corpus cycle is a run too, under its own
+    all-<timestamp> run_id.
 
     Order matters: the gate raises QualityGateError BEFORE anything is
     applied, so a poisoned run changes neither Qdrant nor the ledger.
@@ -79,16 +80,20 @@ def run_finalize(
     Staged nodes of 'done' batches are deleted (the vector store: transient);
     unfinished batches keep theirs and are reported.
     """
+    if not run_id:
+        raise ValueError("run_id is required")
     settings = get_settings()
     engine = engine or get_engine()
 
     with engine.connect() as conn:
-        batch_query = select(ingest_batches)
-        if run_id is not None:
-            batch_query = batch_query.where(ingest_batches.c.run_id == run_id)
-        batches = [dict(r) for r in conn.execute(batch_query).mappings()]
+        batches = [
+            dict(r)
+            for r in conn.execute(
+                select(ingest_batches).where(ingest_batches.c.run_id == run_id)
+            ).mappings()
+        ]
         batch_ids = [b["batch_id"] for b in batches]
-        docs = (
+        batch_docs = (
             [
                 dict(r)
                 for r in conn.execute(
@@ -100,29 +105,31 @@ def run_finalize(
             if batch_ids
             else []
         )
-        deletion_query = select(ingest_deletions)
-        if run_id is not None:
-            deletion_query = deletion_query.where(ingest_deletions.c.run_id == run_id)
-        deletion_rows = [dict(r) for r in conn.execute(deletion_query).mappings()]
-        doc_ids = {d["manifest_id"] for d in deletion_rows}
-        # Filtered in Postgres: only the ledger rows for the docs being
+        deletion_docs = [
+            dict(r)
+            for r in conn.execute(
+                select(ingest_deletions).where(ingest_deletions.c.run_id == run_id)
+            ).mappings()
+        ]
+        deletion_docs_ids = {d["manifest_id"] for d in deletion_docs}
+        # Filtered in Postgres: only the ledger rows for the batch_docs being
         # deleted, not the whole ledger.
-        ledger_by_id = {
+        ledger_docs = {
             l["manifest_id"]: dict(l)
             for l in conn.execute(
-                select(ingest_docs).where(ingest_docs.c.manifest_id.in_(doc_ids))
+                select(ingest_docs).where(ingest_docs.c.manifest_id.in_(deletion_docs_ids))
             ).mappings()
         }
 
-    report = FinalizeReport(run_id=run_id or "<all-runs>")
-    for doc in docs:
+    report = FinalizeReport(run_id=run_id)
+    for doc in batch_docs:
         report.doc_counts[doc["status"]] = report.doc_counts.get(doc["status"], 0) + 1
-    report.error_rate = parse_error_rate([d["status"] for d in docs])
-    # No batch-status column: a batch is unfinished iff any of its docs is
+    report.error_rate = parse_error_rate([d["status"] for d in batch_docs])
+    # No batch-status column: a batch is unfinished iff any of its batch_docs is
     # still 'pending' or 'staged' (parse/embed not yet through it). A batch
-    # with no such docs — including an empty batch — counts as done.
+    # with no such batch_docs — including an empty batch — counts as done.
     unfinished_batch_ids = {
-        d["batch_id"] for d in docs if d["status"] in ("pending", "staged")
+        d["batch_id"] for d in batch_docs if d["status"] in ("pending", "staged")
     }
     report.unfinished_batches = sum(
         1 for b in batches if b["batch_id"] in unfinished_batch_ids
@@ -132,11 +139,11 @@ def run_finalize(
         raise QualityGateError(
             f"parse-error rate {report.error_rate:.1%} exceeds threshold "
             f"{settings.max_parse_error_rate:.1%} "
-            f"({report.doc_counts.get('error', 0)} of {len(docs)} docs) — "
+            f"({report.doc_counts.get('error', 0)} of {len(batch_docs)} batch_docs) — "
             "failing before applying deletions"
         )
 
-    to_apply = select_applicable_deletions(deletion_rows, ledger_by_id)
+    to_apply = select_applicable_deletions(deletion_docs, ledger_docs)
     own_writer = writer is None
     if to_apply:
         writer = writer or QdrantWriter(settings.qdrant_url, settings.qdrant_collection)
@@ -164,7 +171,7 @@ def run_finalize(
             )
             report.staged_rows_deleted = result.rowcount
     logger.info(
-        "finalize %s: docs=%s error_rate=%.1f%% deletions=%d staged_deleted=%d unfinished=%d",
+        "finalize %s: batch_docs=%s error_rate=%.1f%% deletions=%d staged_deleted=%d unfinished=%d",
         report.run_id,
         report.doc_counts,
         report.error_rate * 100,

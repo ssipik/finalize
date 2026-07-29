@@ -22,10 +22,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--run-id",
-        default=None,
+        required=True,
         help="run whose batches/deletions to finalize (the rag_plan run_id = "
-        "ingest_batches.run_id). Omitted: whole-table — all batches, every "
-        "still-active deletion",
+        "ingest_batches.run_id). Whole-corpus runs pass their own "
+        "all-<timestamp> run_id",
     )
     return parser
 
