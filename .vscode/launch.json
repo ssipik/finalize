@@ -6,16 +6,26 @@
     "configurations": [
 
         {
-            "name": "Python Debugger: Module",
+            "name": "rag_finalize",
             "type": "debugpy",
             "request": "launch",
             "module": "rag_finalize",
             "args": [
-                "--run-id", "all-20260728T150308Z",
+                "--run-id", "local-20260811T153836Z",
             ],
         },
         {
-            "name": "Python Debugger: purge_manifest_entries",
+            "name": "sanity_check",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/sanity_check.py",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--batch-id", "30",
+            ],
+        },
+        {
+            "name": "purge_manifest_entries",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/purge_manifest_entries.py",
