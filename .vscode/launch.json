@@ -13,6 +13,13 @@
             "args": [
                 "--run-id", "all-20260728T150308Z",
             ],
+        },
+        {
+            "name": "Python Debugger: purge_manifest_entries",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/purge_manifest_entries.py",
+            "cwd": "${workspaceFolder}",
         }
     ]
 }
