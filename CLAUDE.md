@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Stage 6 (FINALIZE) of the six-stage ingestion skeleton — `../ARCHITECTURE.md` block 11 is authoritative. Standalone stage module: `settings.py`, `sources.py`, `db.py`, `qdrant.py` are **deliberately duplicated** from the other stage packages — fix infra bugs in every copy.
+Stage 6 (FINALIZE) of the six-stage ingestion skeleton — `../ARCHITECTURE.md` block 11 is authoritative. Standalone stage module: `settings.py`, `db.py` and `qdrant.py` are **deliberately duplicated** from the other stage packages — fix infra bugs in every copy. Configuration is **not** duplicated: `sources.yaml` and `parameters.yaml` come from the shared `rag-config` package (`../config`) — edit them there, once.
 
 ## Commands
 

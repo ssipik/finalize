@@ -11,6 +11,8 @@ import argparse
 import logging
 import sys
 
+from dotenv import load_dotenv
+
 from rag_finalize.finalize import QualityGateError, run_finalize
 
 
@@ -58,4 +60,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    # Only needed when running in development. In production the env variables are provided by Vault.
+    load_dotenv()
     raise SystemExit(main())

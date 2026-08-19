@@ -4,10 +4,12 @@ version = "0.1.0"
 description = "Pipeline module for the agentic RAG pipeline (stage 6: finalize — quality gate, deletions, staging cleanup)"
 requires-python = ">=3.13"
 dependencies = [
+    "rag-config",
     "pydantic>=2.7",
     "PyYAML>=6.0",
     "SQLAlchemy>=2.0",
     "psycopg[binary]>=3.1",
+    "dotenv>=0.9.9",
     "qdrant-client>=1.12",
 ]
 
@@ -15,6 +17,12 @@ dependencies = [
 dev = [
     "pytest>=8.0",
 ]
+
+# Shared sources.yaml + parameters.yaml, pinned to an exact commit — uv.lock
+# records it, so the Docker build installs it like any other dependency and a
+# config change reaches this stage only when someone re-locks it here.
+[tool.uv.sources]
+rag-config = { git = "https://bitbucket.org/get-capital/config.git", rev = "main" }
 
 [build-system]
 requires = ["hatchling"]
