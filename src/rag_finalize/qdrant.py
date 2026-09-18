@@ -23,9 +23,13 @@ def doc_filter(manifest_id: int) -> models.Filter:
 
 
 class QdrantWriter:
-    def __init__(self, url: str, collection: str, client: QdrantClient | None = None):
+    def __init__(
+        self, url: str, collection: str, timeout: float, client: QdrantClient | None = None
+    ):
         self.collection = collection
-        self._client = client or QdrantClient(url=url)
+        # without an explicit timeout qdrant-client uses httpx's 5 s, which a
+        # wait=true delete can exceed while Qdrant is indexing in the background
+        self._client = client or QdrantClient(url=url, timeout=int(timeout))
 
     def delete_doc_points(self, manifest_id: int) -> None:
         if not self._client.collection_exists(self.collection):

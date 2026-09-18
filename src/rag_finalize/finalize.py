@@ -146,7 +146,9 @@ def run_finalize(
     to_apply = select_applicable_deletions(deletion_docs, ledger_docs)
     own_writer = writer is None
     if to_apply:
-        writer = writer or QdrantWriter(settings.qdrant_url, settings.qdrant_collection)
+        writer = writer or QdrantWriter(
+            settings.qdrant_url, settings.qdrant_collection, settings.http_timeout
+        )
         try:
             for row in to_apply:
                 writer.delete_doc_points(row["manifest_id"])
