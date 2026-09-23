@@ -534,7 +534,7 @@ wheels = [
 [[package]]
 name = "rag-config"
 version = "0.1.0"
-source = { git = "https://bitbucket.org/get-capital/config.git?rev=main#910955d1b92b738f2d086b70fb5a05b09166e6c1" }
+source = { git = "https://bitbucket.org/get-capital/config.git?rev=main#df5a60c73514b1b1744c405e585fb2a776fc5aa8" }
 dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
