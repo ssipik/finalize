@@ -22,7 +22,7 @@ dev = [
 # records it, so the Docker build installs it like any other dependency and a
 # config change reaches this stage only when someone re-locks it here.
 [tool.uv.sources]
-rag-config = { git = "https://bitbucket.org/get-capital/config.git", rev = "main" }
+rag-config = { git = "https://github.com/ssipik/config.git", rev = "main" }
 
 [build-system]
 requires = ["hatchling"]

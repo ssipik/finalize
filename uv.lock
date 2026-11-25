@@ -534,7 +534,11 @@ wheels = [
 [[package]]
 name = "rag-config"
 version = "0.1.0"
+<<<<<<< HEAD
 source = { git = "https://bitbucket.org/get-capital/config.git?rev=main#df5a60c73514b1b1744c405e585fb2a776fc5aa8" }
+=======
+source = { git = "https://github.com/ssipik/config.git?rev=main#4652cdcc13c4441558ef9953a07c21b504e2180b" }
+>>>>>>> 87a7cd0 (udated config)
 dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -567,7 +571,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "qdrant-client", specifier = ">=1.12" },
-    { name = "rag-config", git = "https://bitbucket.org/get-capital/config.git?rev=main" },
+    { name = "rag-config", git = "https://github.com/ssipik/config.git?rev=main" },
     { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 provides-extras = ["dev"]
